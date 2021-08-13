@@ -438,7 +438,7 @@ class TFDebertaV2Encoder(tf.keras.layers.Layer):
                 next_kv = output_states
 
             if output_attentions:
-                all_attentions = output_states + (layer_outputs[1],)
+                all_attentions = all_attentions + (layer_outputs[1],)
 
         # Add last layer
         if output_hidden_states:
