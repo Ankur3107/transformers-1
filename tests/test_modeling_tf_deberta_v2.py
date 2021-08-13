@@ -260,7 +260,7 @@ class TFDebertaModelTest(TFModelTesterMixin, unittest.TestCase):
 
 
 @require_tf
-class TFDeBERTaModelIntegrationTest(unittest.TestCase):
+class TFDeBERTaV2ModelIntegrationTest(unittest.TestCase):
     @unittest.skip(reason="Model not available yet")
     def test_inference_masked_lm(self):
         pass
