@@ -20,8 +20,6 @@ from typing import Dict, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.eager.context import context
-from tensorflow.python.keras.backend import shape
 
 from ...activations_tf import get_tf_activation
 from ...file_utils import add_code_sample_docstrings, add_start_docstrings, add_start_docstrings_to_model_forward
@@ -49,6 +47,7 @@ from .configuration_deberta_v2 import DebertaV2Config
 
 logger = logging.get_logger(__name__)
 
+# tnp.experimental_enable_numpy_behavior()
 
 _CONFIG_FOR_DOC = "DebertaV2Config"
 _TOKENIZER_FOR_DOC = "DebertaV2Tokenizer"
@@ -792,8 +791,6 @@ class TFDebertaV2DisentangledSelfAttention(tf.keras.layers.Layer):
                 r_pos = relative_pos
 
             p2c_pos = tf.clip_by_value(-r_pos + att_span, 0, att_span * 2 - 1)
-            if shape_list(query_layer)[-2] != shape_list(key_layer)[-2]:
-                pos_index = tf.expand_dims(relative_pos[:, :, :, 0], -1)
 
         if "p2c" in self.pos_att_type:
             p2c_att = tf.matmul(key_layer, tf.transpose(pos_query_layer, [0, 2, 1]))
@@ -809,9 +806,12 @@ class TFDebertaV2DisentangledSelfAttention(tf.keras.layers.Layer):
                 [0, 2, 1],
             )
             if shape_list(query_layer)[-2] != shape_list(key_layer)[-2]:
+                pos_index = tf.expand_dims(relative_pos[:, :, :, 0], -1)
                 p2c_att = torch_gather(
                     p2c_att,
-                    tf.broadcast_to(shape_list(p2c_att)[:2] + [shape_list(pos_index)[-2], shape_list(key_layer)[-2]]),
+                    tf.broadcast_to(
+                        pos_index, shape_list(p2c_att)[:2] + [shape_list(pos_index)[-2], shape_list(key_layer)[-2]]
+                    ),
                     -2,
                 )
             score += p2c_att / scale
@@ -822,10 +822,11 @@ class TFDebertaV2DisentangledSelfAttention(tf.keras.layers.Layer):
             p2p_att = tf.matmul(pos_query, tf.transpose(pos_key_layer, [0, 2, 1]))
             p2p_att = tf.broadcast_to(shape_list(query_layer)[:2] + shape_list(p2p_att)[2:])
             if shape_list(query_layer)[-2] != shape_list(key_layer)[-2]:
+                pos_index = tf.expand_dims(relative_pos[:, :, :, 0], -1)
                 p2p_att = torch_gather(
                     p2p_att,
                     tf.broadcast_to(
-                        shape_list(query_layer)[:2] + [shape_list(pos_index)[-2], shape_list(p2p_att)[-1]]
+                        pos_index, shape_list(query_layer)[:2] + [shape_list(pos_index)[-2], shape_list(p2p_att)[-1]]
                     ),
                     -2,
                 )
@@ -1385,7 +1386,7 @@ class TFDebertaV2ForMaskedLM(TFDebertaV2PreTrainedModel, TFMaskedLanguageModelin
     """,
     DEBERTA_START_DOCSTRING,
 )
-class TFDebertaForSequenceClassification(TFDebertaV2PreTrainedModel, TFSequenceClassificationLoss):
+class TFDebertaV2ForSequenceClassification(TFDebertaV2PreTrainedModel, TFSequenceClassificationLoss):
     def __init__(self, config: DebertaV2Config, *inputs, **kwargs):
         super().__init__(config, *inputs, **kwargs)
 
