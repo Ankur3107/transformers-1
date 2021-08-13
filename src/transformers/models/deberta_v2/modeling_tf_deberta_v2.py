@@ -15,7 +15,6 @@
 """ TF 2.0 DeBERTa-v2 model. """
 
 
-import math
 from typing import Dict, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -273,7 +272,7 @@ class TFDebertaV2ConvLayer(tf.keras.layers.Layer):
         super().__init__(**kwargs)
 
         self.kernel_size = getattr(config, "conv_kernel_size", 3)
-        groups = getattr(config, "conv_groups", 1)
+        # groups = getattr(config, "conv_groups", 1)
         self.conv_act = getattr(config, "conv_act", "tanh")
         self.padding = (self.kernel_size - 1) // 2
         self.LayerNorm = tf.keras.layers.LayerNormalization(epsilon=config.layer_norm_eps, name="LayerNorm")
